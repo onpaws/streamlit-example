@@ -3,36 +3,41 @@ import altair as alt
 import math
 import pandas as pd
 import streamlit as st
+import numpy as np
+import psycopg2
+from collections import defaultdict
 
-"""
-# Welcome to Streamlit!
-
-Edit `/streamlit_app.py` to customize this app to your heart's desire :heart:
-
-If you have any questions, checkout our [documentation](https://docs.streamlit.io) and [community
-forums](https://discuss.streamlit.io).
-
-In the meantime, below is an example of what you can do with just a few lines of code:
-"""
-
+conn = psycopg2.connect(
+    user = st.secrets["ddn"]["username"],
+    password = st.secrets["ddn"]["password"],
+    host = st.secrets["ddn"]["host"],
+    port = st.secrets["ddn"]["port"],
+    database = st.secrets["ddn"]["database"],
+)
 
 with st.echo(code_location='below'):
-    total_points = st.slider("Number of points in spiral", 1, 5000, 2000)
-    num_turns = st.slider("Number of turns in spiral", 1, 100, 9)
-
-    Point = namedtuple('Point', 'x y')
-    data = []
-
-    points_per_turn = total_points / num_turns
-
-    for curr_point_num in range(total_points):
-        curr_turn, i = divmod(curr_point_num, points_per_turn)
-        angle = (curr_turn + 1) * 2 * math.pi * i / points_per_turn
-        radius = curr_point_num / total_points
-        x = radius * math.cos(angle)
-        y = radius * math.sin(angle)
-        data.append(Point(x, y))
-
-    st.altair_chart(alt.Chart(pd.DataFrame(data), height=500, width=500)
-        .mark_circle(color='#0068c9', opacity=0.5)
-        .encode(x='x:Q', y='y:Q'))
+    st.title('Public transit in NYC')
+    data_load_state = st.text('Loading data...')
+    with conn:
+        with conn.cursor() as curs:
+            curs.execute('SELECT * FROM "paws~nyc"."station-traffic"')
+            result = curs.fetchall()
+    
+    conn.close()
+    data_load_state = st.success('Loading data...done!')
+    totals = defaultdict(int)
+    for item in result:
+        if (item[5] < 1000000):
+            totals[item[0]] += item[5]
+    
+    data = {"DATE": [], "TOTAL": []}
+    for k, v in totals.items():
+        data['DATE'].append(k)
+        data['TOTAL'].append(v)
+    
+    source = pd.DataFrame.from_dict(data)
+    line_chart = alt.Chart(source).mark_line().encode(
+            alt.X('DATE:T', title='Time'),
+            alt.Y('TOTAL:Q', title='Weekly rides'),
+        ).properties(title="MTA total turnstile act. per week (Jan 2020-May 2022)")
+    st.altair_chart(line_chart, use_container_width=True)
