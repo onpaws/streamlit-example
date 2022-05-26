@@ -7,6 +7,8 @@ import numpy as np
 import psycopg2
 from collections import defaultdict
 
+st.set_page_config(layout="wide", page_title="NYC Public Transit", page_icon=":train:")
+
 conn = psycopg2.connect(
     user = st.secrets["ddn"]["username"],
     password = st.secrets["ddn"]["password"],
