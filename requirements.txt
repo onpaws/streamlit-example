@@ -2,3 +2,4 @@ altair
 pandas
 streamlit
 psycopg2-binary
+protobuf~=3.19.0  # https://discuss.streamlit.io/t/typeerror-descriptors-cannot-not-be-created-directly/25639/6
