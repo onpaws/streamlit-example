@@ -87,7 +87,6 @@ def popularstations(year):
         data[i[1]] += i[2]
     sorted_data = dict(Counter(data).most_common(5))
 
-    print(sorted_data)
     source = pd.DataFrame({
         'Station': [x for x in sorted_data.keys()],
         'Activity': [x for x in sorted_data.values()]
@@ -98,7 +97,7 @@ def popularstations(year):
         .mark_bar()
         .encode(
             x=alt.X("Station", scale=alt.Scale(nice=False)),
-            y=alt.Y("Activity:Q", scale=alt.Scale(domain=[0, 11000000])),
+            y=alt.Y("Activity:Q", scale=alt.Scale(domain=[0, 15000000])),
             tooltip=["Station", "Activity"],
         )
         .configure_mark(opacity=0.2, color="red"),
@@ -112,9 +111,11 @@ weeklytotals()
 
 row2_1, row2_2 = st.columns((1,1))
 with row2_1:
-    st.write("## Most popular stations year over year")
+    st.write("""
+    ## Most popular stations year over year
+    """)
 with row2_2:
-    month = st.slider("Choose a month (Jan = 1, Feb = 2, etc)", min_value=1, max_value=5, )
+    month = st.slider("Choose a month (Jan = 1, Feb = 2, etc. Stops at 5 b/c our data range stops May 2022)", min_value=1, max_value=5, )
 row3_1, row3_2, row3_3 = st.columns((1,1,1))
 with row3_1:
     popularstations(2020)
@@ -123,10 +124,8 @@ with row3_2:
 with row3_3:
     popularstations(2022)
 
+st.write("###### 'Activity' means a turnstile rotation")
 
 
-
-
-
-
+## clean up DB connection
 conn.close()
